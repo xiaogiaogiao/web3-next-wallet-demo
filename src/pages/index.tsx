@@ -1,36 +1,52 @@
 "use client";
 
 //导入钩子
-import { useWallet } from "@/hooks/useWallet";
-import { use } from "react";
-
+import useWallet from "@/hooks/useWallet";
+import "@/styles/globals.css";
+import { useState } from "react";
 
 export default function Home(){
     
     //使用自定义Hook来获取钱包连接状态
-    const {address,balance,connect,checkWalletConnection } = useWallet();
+        const { address, balance, isConnected, connect } = useWallet()
+    const [loading, setLoading] = useState(false)
+
+    const handleConnect = async () => {
+        setLoading(true)
+        try {
+        await connect()
+        } finally {
+        setLoading(false)
+        }
+    }
 
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <h1 className="text-3xl font-bold mb-4">web3钱包链接</h1>
-            <p className="mb-4">连接您的钱包以查看地址和余额</p>
-            <button 
-                onClick={connect} 
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-            连接钱包
-            </button>
-            <p className="mt-4">{address ? "已连接" : "未连接"}</p>
-            {address && (
-                <div className="mt-4">
-                    <p>Address: {address}</p>
-                    <p>Balance: {balance} ETH</p>
+         <div className="wallet-container">
+            <h1>Web3 钱包连接 Demo</h1>
+            
+            {isConnected ? (
+                <div className="wallet-info">
+                <h2>💰 钱包信息</h2>
+                <p><strong>地址:</strong> {address}</p>
+                <p><strong>余额:</strong> {balance} ETH</p>
+                
+                <div className="notice">
+                    <small>尝试在MetaMask切换账户，页面将自动更新</small>
                 </div>
+                </div>
+            ) : (
+                <button 
+                onClick={handleConnect}
+                disabled={loading}
+                className="connect-button"
+                >
+                {loading ? '连接中...' : '连接钱包'}
+                </button>
             )}
-            <button onClick={checkWalletConnection}>刷新钱包状态</button>
-        </div>
-    )
+            </div>
+        )
+   
 }
 
 
