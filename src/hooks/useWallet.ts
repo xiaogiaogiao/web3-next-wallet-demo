@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
-import {ethers} from "erhers";
+import {ethers} from "ethers";
 
 export const useWallet =() =>{
     //这是一个自定义Hook，用于管理钱包连接状态
