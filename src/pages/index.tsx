@@ -8,7 +8,7 @@ import { use } from "react";
 export default function Home(){
     
     //使用自定义Hook来获取钱包连接状态
-    const {address,balance,connect}=useWallet();
+    const {address,balance,connect,checkWalletConnection } = useWallet();
 
 
     return (
@@ -21,12 +21,14 @@ export default function Home(){
             >
             连接钱包
             </button>
+            <p className="mt-4">{address ? "已连接" : "未连接"}</p>
             {address && (
                 <div className="mt-4">
                     <p>Address: {address}</p>
                     <p>Balance: {balance} ETH</p>
                 </div>
             )}
+            <button onClick={checkWalletConnection}>刷新钱包状态</button>
         </div>
     )
 }
