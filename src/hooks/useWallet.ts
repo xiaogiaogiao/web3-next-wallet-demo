@@ -31,6 +31,9 @@ const useWallet = () => {
 
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
 
+  const [loaggedIn, setLoaggedIn] = useState(false);
+  const [signature,setSignature] =useState<string|null>(null);
+
   const { disconnect } = useDisconnect();
 
   // 初始化Provider
@@ -127,7 +130,32 @@ const useWallet = () => {
     });
   };
 
-  return { ...state, connect, provider, sendTransaction };
+  //登录函数
+  const signIn = async () => {
+    if (!provider || !state.address) return;
+    try {
+      const signer = await provider.getSigner();
+      // 建议后端生成nonce，这里用时间戳+随机数简单模拟
+      const nonce = `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      const message = `登录请求：${nonce}`;
+      const sig = await signer.signMessage(message);
+      // ethers v6: verifyMessage 是顶级方法
+      const recoveredAddress = ethers.verifyMessage(message, sig);
+      if (recoveredAddress.toLowerCase() === state.address.toLowerCase()) {
+        setSignature(sig);
+        setLoaggedIn(true);
+        return { success: true, signature: sig, message, address: state.address };
+      } else {
+        setLoaggedIn(false);
+        return { success: false, error: '签名验证失败' };
+      }
+    } catch (err: any) {
+      setLoaggedIn(false);
+      return { success: false, error: err.message || '登录失败' };
+    }
+  };
+
+  return { ...state, connect, provider, sendTransaction, signIn, signature, loaggedIn };
 };
 
 export default useWallet;

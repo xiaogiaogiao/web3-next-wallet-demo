@@ -22,6 +22,48 @@
 
 ---
 
+## 无密码登录与签名验证
+
+- **Q: Web3 DApp 如何实现无密码登录？如何用 verifyMessage 验证签名合法性？**
+- **A:**
+  1. 前端生成（或从后端获取）带 nonce 的消息，用户用钱包签名。
+  2. 前端将签名、消息、地址发送给后端。
+  3. 后端用 `ethers.verifyMessage(message, signature)` 得到 address，比对与用户地址是否一致。
+  4. 验证通过则登录成功，后端可生成 session/JWT。
+
+- **Q: 为什么签名验证要在后端做？**
+- **A:** 前端验证只能防止用户误操作，不能防止伪造请求。只有后端验证签名，才能保证登录安全，防止重放攻击和伪造。
+
+- **代码示例：**
+
+前端：
+```js
+const signature = await signer.signMessage(message);
+await fetch('/api/auth', {
+  method: 'POST',
+  body: JSON.stringify({ address, message, signature }),
+  headers: { 'Content-Type': 'application/json' }
+});
+```
+
+后端：
+```js
+import { verifyMessage } from 'ethers';
+
+app.post('/api/auth', async (req, res) => {
+  const { address, message, signature } = req.body;
+  const recovered = verifyMessage(message, signature);
+  if (recovered.toLowerCase() === address.toLowerCase()) {
+    // 登录成功，生成token/session
+    res.json({ success: true, token: '...' });
+  } else {
+    res.status(401).json({ success: false, error: '签名验证失败' });
+  }
+});
+```
+
+---
+
 ## 跨链转账原理
 
 - **Q: 你怎么实现A链转账到B链？**
@@ -47,6 +89,37 @@ await hop.send('ETH', {
   toAddress: '0x...',
 });
 ```
+
+---
+
+## 跨链桥官方实现与合约调用
+
+- **Q: 你用过哪些官方跨链桥？具体怎么实现？主要用到哪个ABI？**
+- **A:**
+  - 常见官方桥有 Arbitrum Bridge、Optimism Gateway、Polygon PoS Bridge 等。
+  - 实现原理：用户在源链调用桥合约的 deposit/lock 方法，桥服务监听事件，在目标链释放/铸造资产。
+  - 前端用 ethers.js/wagmi 连接桥合约，调用 deposit/lock 方法，传入目标地址和金额。
+
+- **以 Arbitrum 官方桥为例：**
+  - 合约地址（以太坊主网）：`0x4c6f947Ae67F572afa4ae0730947DE7C874F95Ef`
+  - 主要 ABI 方法：
+    - `depositEth(address to)`
+    - `depositERC20(address l1Token, address l2Token, address to, uint256 amount, uint256 maxGas, uint256 gasPriceBid, bytes calldata data)`
+
+- **代码示例：**
+```js
+import { ethers } from 'ethers';
+const inboxAbi = [
+  'function depositEth(address to) payable returns (uint256 seqNum)'
+];
+const provider = new ethers.BrowserProvider(window.ethereum);
+const signer = await provider.getSigner();
+const inbox = new ethers.Contract('0x4c6f947Ae67F572afa4ae0730947DE7C874F95Ef', inboxAbi, signer);
+const tx = await inbox.depositEth('0xYourL2Address', { value: ethers.parseEther('0.01') });
+await tx.wait();
+```
+
+- **其它官方桥也有类似的 deposit/withdraw 方法，具体 ABI 见官方文档或 etherscan。**
 
 ---
 

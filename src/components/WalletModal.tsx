@@ -2,6 +2,7 @@
 
 import { useAccount, useConnect, useDisconnect, useBalance, useChainId } from 'wagmi';
 import { useState } from 'react';
+import WalletSignIn from '@/components/WalletSignIn';
 
 function SendEthForm() {
   const { address, isConnected } = useAccount();
@@ -126,6 +127,9 @@ export default function WalletModal({ open, onClose }: { open: boolean, onClose:
             <div className="text-gray-700">
               <span className="font-medium">ChainID:</span> {chainId}
             </div>
+            <div className="my-4 border-t border-dashed border-gray-200"></div>
+            <WalletSignIn />
+            <div className="my-4 border-t border-dashed border-gray-200"></div>
             <SendEthForm />
             <button
               className="w-full mt-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition"
