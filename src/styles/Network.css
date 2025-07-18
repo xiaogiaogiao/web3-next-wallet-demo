@@ -1,0 +1,22 @@
+.network-switcher {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.network-switcher button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.network-switcher button:disabled {
+  background: #eee;
+  cursor: not-allowed;
+}
+
+.network-switcher button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
