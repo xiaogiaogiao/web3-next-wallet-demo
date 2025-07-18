@@ -1,9 +1,9 @@
 import { createConfig, http } from 'wagmi'
-import { mainnet, polygon, bsc } from 'wagmi/chains'
+import { mainnet, polygon, bsc, sepolia } from 'wagmi/chains'
 import { injected, walletConnect } from 'wagmi/connectors'
 
 //1.定义支持的链
-const chains = [mainnet, polygon, bsc];
+const chains = [mainnet, polygon, bsc, sepolia];
 
 //2.配置钱包连接项目ID(从walletConnect官网获取)
 // 注意：请替换为你的真实Project ID
@@ -20,7 +20,7 @@ const metadata = {
 
 //4.配置Wagmi v2
 const wagmiConfig = createConfig({
-    chains: [mainnet, polygon, bsc],
+    chains,
     connectors: [
         injected(),
         walletConnect({ 
@@ -39,6 +39,7 @@ const wagmiConfig = createConfig({
         [mainnet.id]: http(),
         [polygon.id]: http(),
         [bsc.id]: http(),
+        [sepolia.id]: http(),
     },
 })
 

@@ -349,3 +349,30 @@ const chains = [mainnet, polygon, bsc, arbitrum];
 ## 许可证
 
 MIT License
+```
+
+## Day 4：发送 ETH 与错误处理
+
+### ✅ 实现内容
+- 新增 `sendTransaction(to, amount)` 方法，支持 ETH 发送
+- 处理错误码（特别是用户拒绝：4001）
+- 添加状态提示、按钮加载等 UX 提升
+- 创建了 `SendEthForm.tsx` 表单组件
+
+### 📚 学到的点
+- MetaMask 返回的错误对象结构：error.code
+- 如何使用 signer 进行交易
+- await tx.wait() 会等到链上确认
+
+### 🧪 待测试
+- 输入错误地址
+- 金额不足
+- 用户拒绝交易
+- 正常成功交易
+
+---
+
+### 💡 面试常问：wagmi 如何解决钱包冲突与转账问题？
+
+- **钱包冲突**：wagmi 通过 `connectors` 支持多钱包（如 MetaMask、WalletConnect），每次连接会自动切换当前活跃钱包，内部管理 session，避免多钱包冲突。
+- **转账问题**：wagmi 推荐用 `useSendTransaction` 或直接用 ethers.js 的 signer 进行转账，能自动处理链切换、余额不足、用户拒绝等常见错误，并可通过 error.code 精准捕获用户行为。
