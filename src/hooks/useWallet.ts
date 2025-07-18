@@ -6,6 +6,13 @@ type WalletState = {
   balance: string;
   chainId: number | null;
   isConnected: boolean;
+  networkName: string;
+};
+
+const CHAIN_INFO: Record<number, { name: string }> = {
+  1: { name: 'Ethereum' },
+  56: { name: 'BNB Chain' },
+  137: { name: 'Polygon' }
 };
 
 const useWallet = () => {
@@ -14,96 +21,71 @@ const useWallet = () => {
     balance: '0',
     chainId: null,
     isConnected: false,
+    networkName: ''
   });
 
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
 
-  // 只在浏览器环境下初始化本地 state
+  // 初始化Provider
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem('web3-wallet-state');
-      if (saved) {
-        setState(JSON.parse(saved));
-      }
+    if (typeof window !== "undefined" && window.ethereum) {
+      setProvider(new ethers.BrowserProvider(window.ethereum));
     }
   }, []);
 
   // 统一状态更新方法
-  const updateWalletState = (updates: Partial<WalletState>) => {
-    setState(prev => {
-      const newState = { ...prev, ...updates };
-      if (typeof window !== "undefined") {
-        localStorage.setItem('web3-wallet-state', JSON.stringify(newState));
-      }
-      return newState;
-    });
+  const updateWalletState = async (provider: ethers.BrowserProvider) => {
+    const accounts = await provider.send('eth_accounts', []);
+    const network = await provider.getNetwork();
+    if (accounts.length > 0) {
+      const balance = await provider.getBalance(accounts[0]);
+      setState({
+        address: accounts[0],
+        balance: ethers.formatEther(balance),
+        chainId: Number(network.chainId),
+        isConnected: true,
+        networkName: CHAIN_INFO[Number(network.chainId)]?.name || 'Unknown'
+      });
+    } else {
+      setState({
+        address: null,
+        balance: '0',
+        chainId: Number(network.chainId),
+        isConnected: false,
+        networkName: CHAIN_INFO[Number(network.chainId)]?.name || 'Unknown'
+      });
+    }
   };
 
-  // 初始化Provider和事件监听
+  // 事件监听
   useEffect(() => {
-    if (typeof window === "undefined" || !window.ethereum) return;
+    if (!window.ethereum || !provider) return;
 
-    const initProvider = new ethers.BrowserProvider(window.ethereum);
-    setProvider(initProvider);
-      console.log("initProvider:",ethers);
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) {
-        updateWalletState({
-          address: null,
-          balance: '0',
-          isConnected: false
-        });
-      } else {
-        updateWalletState({
-          address: accounts[0],
-          isConnected: true
-        });
-        initProvider.getBalance(accounts[0])
-          .then(bal => updateWalletState({
-            balance: ethers.formatEther(bal)
-          }));
-      }
+    const handleAccountsChanged = () => updateWalletState(provider);
+    const handleChainChanged = () => {
+      // 重新初始化 provider 并刷新钱包状态
+      const newProvider = new ethers.BrowserProvider(window.ethereum);
+      setProvider(newProvider);
+      updateWalletState(newProvider);
     };
 
     window.ethereum.on('accountsChanged', handleAccountsChanged);
+    window.ethereum.on('chainChanged', handleChainChanged);
 
-    // 初始加载时检查连接状态
-    initProvider.send('eth_accounts', [])
-      .then(accounts => {
-        if (accounts.length > 0) handleAccountsChanged(accounts);
-      });
+    // 初始加载
+    updateWalletState(provider);
 
     return () => {
       window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+      window.ethereum?.removeListener('chainChanged', handleChainChanged);
     };
-  }, []);
+  }, [provider]);
 
   const connect = async () => {
     if (!provider) return;
-    
-    try {
-        // 请求用户授权
-      const accounts = await provider.send('eth_requestAccounts', []);
-      if (accounts.length > 0) {
-        // 更新状态
-        updateWalletState({
-          address: accounts[0],
-          isConnected: true
-        });
-        // 获取链ID
-        const bal = await provider.getBalance(accounts[0]);
-        const chainId = await provider.getNetwork().then(network => network.chainId);
-        updateWalletState({
-          chainId: await provider.getNetwork().then(net => net.chainId)
-        });
-       
-        updateWalletState({
-          balance: ethers.formatEther(bal)
-        });
-      }
-    } catch (error) {
-      console.error('Connection failed:', error);
-      throw error;
+    const accounts = await provider.send('eth_requestAccounts', []);
+    if (accounts.length > 0) {
+      await updateWalletState(provider);
     }
   };
 
