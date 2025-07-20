@@ -38,9 +38,30 @@ export default function Home() {
         <h1 style={{ textAlign: 'center', marginTop: 40, color: '#222' }}>
           欢迎体验 Web3 多钱包连接演示
         </h1>
-        <p style={{ textAlign: 'center', color: '#888' }}>
+        <p style={{ textAlign: 'center', color: '#888', marginBottom: 40 }}>
           点击右上角"钱包"按钮进行连接和转账
         </p>
+        
+        <div style={{ textAlign: 'center' }}>
+          <a 
+            href="/trading" 
+            style={{
+              display: 'inline-block',
+              padding: '12px 24px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007bff'}
+          >
+            进入实时交易页面
+          </a>
+        </div>
       </div>
       <WalletModal open={showWallet} onClose={() => setShowWallet(false)} />
     </div>
