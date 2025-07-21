@@ -3,7 +3,7 @@
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   background: #fff;
   border-bottom: 1px solid #eee;
   padding: 0 32px;
@@ -11,6 +11,27 @@
   top: 0;
   left: 0;
   z-index: 1000;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.nav-link {
+  color: #666;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
 }
 .wallet-nav-btn {
   background: #007bff;
